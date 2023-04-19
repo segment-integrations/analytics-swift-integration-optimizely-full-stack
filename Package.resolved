@@ -6,8 +6,8 @@
         "repositoryURL": "https://github.com/segmentio/analytics-swift.git",
         "state": {
           "branch": null,
-          "revision": "76316a5009502de6e7c2788c295e9afc68793cd3",
-          "version": "1.1.2"
+          "revision": "26f23a2ae9b8dd47aeee1bdaa1e203f3bed6044e",
+          "version": "1.4.0"
         }
       },
       {
@@ -24,8 +24,8 @@
         "repositoryURL": "https://github.com/optimizely/swift-sdk.git",
         "state": {
           "branch": null,
-          "revision": "193cc00e1004d29f16f7b32e5b6787199760c482",
-          "version": "3.10.1"
+          "revision": "26c5b02b8889f4ae8d53627018023fc36a11ab9a",
+          "version": "3.10.2"
         }
       }
     ]
