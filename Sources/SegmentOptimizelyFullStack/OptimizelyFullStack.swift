@@ -31,7 +31,7 @@ import Segment
 import Optimizely
 
 @objc(SEGOptimizelyFullStackDestination)
-public class ObjCSegmentOptimizelyFullStack: NSObject, ObjCDestination, ObjCDestinationShim {
+public class ObjCSegmentOptimizelyFullStack: NSObject, ObjCPlugin, ObjCPluginShim {
     private var optimizelyKey: String!
     private var experimentKey: String? = ""
     
@@ -41,13 +41,14 @@ public class ObjCSegmentOptimizelyFullStack: NSObject, ObjCDestination, ObjCDest
         self.experimentKey = experimentKey
     }
     
-    public func instance() -> DestinationPlugin { return OptimizelyFullStack(optimizelyKey: optimizelyKey) }
+    public func instance() -> EventPlugin { return OptimizelyFullStack(optimizelyKey: optimizelyKey) }
 
 }
 
-public class OptimizelyFullStack: DestinationPlugin {
+public class OptimizelyFullStack: EventPlugin {
+    
     public let timeline = Timeline()
-    public let type = PluginType.destination
+    public let type = PluginType.enrichment
     public let key = "Optimizely X"
     public var analytics: Analytics? = nil
     
@@ -66,10 +67,10 @@ public class OptimizelyFullStack: DestinationPlugin {
     public func update(settings: Settings, type: UpdateType) {
         guard type == .initial else { return }
         
-        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forPlugin: self) else {
+        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forKey: key) else {
             return
         }
-        
+
         optimizelySettings = tempSettings
         
         initializeOptimizelySDKAsynchronous()
