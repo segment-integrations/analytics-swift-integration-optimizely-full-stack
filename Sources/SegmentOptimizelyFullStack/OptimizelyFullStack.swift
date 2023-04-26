@@ -45,10 +45,10 @@ public class ObjCSegmentOptimizelyFullStack: NSObject, ObjCPlugin, ObjCPluginShi
 
 }
 
-public class OptimizelyFullStack: EventPlugin {
+public class OptimizelyFullStack: DestinationPlugin {
     
     public let timeline = Timeline()
-    public let type = PluginType.enrichment
+    public let type = PluginType.destination
     public let key = "Optimizely X"
     public var analytics: Analytics? = nil
     
@@ -67,7 +67,7 @@ public class OptimizelyFullStack: EventPlugin {
     public func update(settings: Settings, type: UpdateType) {
         guard type == .initial else { return }
         
-        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forKey: key) else {
+        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forPlugin: self) else {
             return
         }
 
