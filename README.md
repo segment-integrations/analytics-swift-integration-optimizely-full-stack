@@ -1,15 +1,17 @@
-# Analytics-Swift OptimizelyFullStack
+# Analytics-Swift Optimizely FullStack
 
-Add OptimizelyFullStack session tracking support to your applications via this plugin for [Analytics-Swift](https://github.com/segmentio/analytics-swift)
-
-Note that this plugin simply adds session data for OptimizelyFullStack, and events are sent via Cloud Mode.
+Add `Optimizely FullStack` device mode support to your applications via this plugin for [Analytics-Swift](https://github.com/segmentio/analytics-swift).
 
 ## Adding the dependency
 
-### via Xcode
-In the Xcode `File` menu, click `Add Packages`.  You'll see a dialog where you can search for Swift packages.  In the search field, enter the URL to this repo.
+***Note:** the `Optimizely FullStack` library itself will be installed as an additional dependency.
 
+### via Xcode
+In the Xcode `File` menu, click `Add Packages`.  You'll see a dialog where you can search for Swift packages.  In the search field, enter the URL for this repo.
+
+```
 https://github.com/segment-integrations/analytics-swift-optimizely
+```
 
 You'll then have the option to pin to a version, or specific branch, as well as which project in your workspace to add it to.  Once you've made your selections, click the `Add Package` button.  
 
@@ -45,7 +47,7 @@ analytics.add(plugin: OptimizelyFullStack(optimizelyKey: "<Optimizely Production
 ```
 Please Note : Here "optimizelyKey" you can get from Optimizely Dashboard Settings. You can use development or production SDK key respectively.
 
-Your events will now be given OptimizelyFullStack session data and start flowing to OptimizelyFullStack via Cloud Mode.
+Your events will now be given OptimizelyFullStack session data and start flowing to OptimizelyFullStack via Device Mode.
 
 
 ## Support
