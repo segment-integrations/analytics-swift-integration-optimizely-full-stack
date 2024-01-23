@@ -23,12 +23,12 @@ let package = Package(
         .package(
             name: "Segment",
             url: "https://github.com/segmentio/analytics-swift.git",
-            from: "1.1.2"
+            from: "1.4.1"
         ),
         .package(
             name: "Optimizely",
             url: "https://github.com/optimizely/swift-sdk.git",
-            from: "3.10.1"
+            from: "3.10.2"
         )
     ],
     targets: [
@@ -38,7 +38,7 @@ let package = Package(
             name: "SegmentOptimizelyFullStack",
             dependencies: ["Segment", .product(
                 name: "Optimizely",
-                package: "Optimizely")]),
+                package: "Optimizely")])
         
         // TESTS ARE HANDLED VIA THE EXAMPLE APP.
     ]

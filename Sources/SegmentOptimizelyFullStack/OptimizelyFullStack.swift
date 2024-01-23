@@ -30,7 +30,23 @@ import Foundation
 import Segment
 import Optimizely
 
+@objc(SEGOptimizelyFullStackDestination)
+public class ObjCSegmentOptimizelyFullStack: NSObject, ObjCPlugin, ObjCPluginShim {
+    private var optimizelyKey: String!
+    private var experimentKey: String? = ""
+    
+    //call this function then call instance always
+    public func initializeOptimizely(optimizelyKey: String, experimentKey: String? = ""){
+        self.optimizelyKey = optimizelyKey
+        self.experimentKey = experimentKey
+    }
+    
+    public func instance() -> EventPlugin { return OptimizelyFullStack(optimizelyKey: optimizelyKey) }
+
+}
+
 public class OptimizelyFullStack: DestinationPlugin {
+    
     public let timeline = Timeline()
     public let type = PluginType.destination
     public let key = "Optimizely X"
@@ -51,8 +67,10 @@ public class OptimizelyFullStack: DestinationPlugin {
     public func update(settings: Settings, type: UpdateType) {
         guard type == .initial else { return }
         
-        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forPlugin: self) else { return }
-        
+        guard let tempSettings: OptimizelySettings = settings.integrationSettings(forPlugin: self) else {
+            return
+        }
+
         optimizelySettings = tempSettings
         
         initializeOptimizelySDKAsynchronous()
@@ -65,9 +83,9 @@ public class OptimizelyFullStack: DestinationPlugin {
         optimizelyClient.start { result in
             switch result {
             case .failure(let error):
-                self.analytics?.log(message: "Optimizely SDK initiliazation failed: \(error)")
+                debugPrint("Optimizely SDK initiliazation failed: \(error)")
             case .success:
-                self.analytics?.log(message: "Optimizely SDK initialized successfully!")
+                debugPrint("Optimizely SDK initialized successfully!")
             }
         }
     }
@@ -78,30 +96,33 @@ public class OptimizelyFullStack: DestinationPlugin {
         
         if optimizelySettings?.listen == true {
             _ = notificationCenter.addDecisionNotificationListener(decisionListener: { (type, userId, attributes, decisionInfo) in
-                self.analytics?.log(message: "Received decision notification: \(type) \(userId) \(String(describing: attributes)) \(decisionInfo)")
-                let properties: [String: Any] = ["type": type,
+                let decisionInfoStr = (decisionInfo.compactMap({ (key, value) -> String in
+                            return "\(key)=\(value)"
+                        }) as Array).joined(separator: ";")
+                let attributesStr = ((attributes?.compactMap({ (key, value) -> String in
+                    return "\(key)=\(String(describing: value))"
+                }) ?? []) as Array).joined(separator: ";")
+                let properties: [String: Codable] = ["type": type,
                                                  "userId": userId,
-                                                 "attributes": attributes ?? [],
-                                                 "decisionInfo": decisionInfo]
+                                                 "attributes": attributesStr,
+                                                 "decisionInfo": decisionInfoStr]
                 
                 self.analytics?.track(name: "Experiment Viewed", properties: properties)
             })
         }
         
         _ = notificationCenter.addTrackNotificationListener(trackListener: { (eventKey, userId, attributes, eventTags, event) in
-            self.analytics?.log(message: "Received track notification: \(eventKey) \(userId) \(String(describing: attributes)) \(String(describing: eventTags)) \(event)")
+            debugPrint("Received track notification: \(eventKey) \(userId) \(String(describing: attributes)) \(String(describing: eventTags)) \(event)")
         })
         
         _ = notificationCenter.addDatafileChangeNotificationListener(datafileListener: { _ in
-            self.analytics?.log(message: "Datafile changed")
             if let optConfig = try? self.optimizelyClient.getOptimizelyConfig() {
-                self.analytics?.log(message: "[OptimizelyConfig] revision = \(optConfig.revision)")
+                debugPrint("[OptimizelyConfig] revision = \(optConfig.revision)")
             }
         })
     }
     
     public func identify(event: IdentifyEvent) -> IdentifyEvent? {
-        
         if let currentUserId = event.userId {
             userContext = self.optimizelyClient.createUserContext(userId: currentUserId)
         }
@@ -115,7 +136,7 @@ public class OptimizelyFullStack: DestinationPlugin {
         var userId = event.userId
         
         if userId == nil && (trackKnownUsers != nil && trackKnownUsers == true) {
-            analytics?.log(message: "Segment will only track users associated with a userId when the trackKnownUsers setting is enabled.")
+            debugPrint("Segment will only track users associated with a userId when the trackKnownUsers setting is enabled.")
         }
         
         if trackKnownUsers == false {
@@ -142,17 +163,14 @@ public class OptimizelyFullStack: DestinationPlugin {
             do {
                 try userContext.trackEvent(eventKey: trackEvent.event,
                                            eventTags: eventTags)
-                analytics?.log(message: "Tracked with eventTags - \(eventTags)")
             } catch {
-                analytics?.log(message: "Error - \(error)")
+                
             }
         }
         else {
             do {
                 try userContext.trackEvent(eventKey: trackEvent.event)
-                analytics?.log(message: "Tracked with event Only!")
             } catch {
-                analytics?.log(message: "Error - \(error)")
             }
         }
     }
