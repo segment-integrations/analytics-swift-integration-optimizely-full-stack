@@ -5,6 +5,6 @@
       location = "group:../..">
    </FileRef>
    <FileRef
-      location = "container:../../../../Desktop/OptimizelyFullStack/Example/BasicExample/BasicExample.xcodeproj">
+      location = "group:BasicExample.xcworkspace">
    </FileRef>
 </Workspace>
