@@ -52,8 +52,8 @@ public class OptimizelyFullStack: DestinationPlugin {
     public let key = "Optimizely X"
     public var analytics: Analytics? = nil
     
-    private var optimizelySettings: OptimizelySettings?
-    private var optimizelyClient: OptimizelyClient!
+    public var optimizelySettings: OptimizelySettings?
+    public var optimizelyClient: OptimizelyClient!
     private var userContext: OptimizelyUserContext!
     private var experimentationKey: String!
     
@@ -191,7 +191,7 @@ extension OptimizelyFullStack: VersionedPlugin {
     }
 }
 
-private struct OptimizelySettings: Codable {
+public struct OptimizelySettings: Codable {
     let periodicDownloadInterval: Int?
     let trackKnownUsers: Bool
     let listen: Bool
