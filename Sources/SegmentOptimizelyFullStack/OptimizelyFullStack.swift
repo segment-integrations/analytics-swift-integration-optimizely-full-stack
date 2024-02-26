@@ -51,11 +51,14 @@ public class OptimizelyFullStack: DestinationPlugin {
     public let type = PluginType.destination
     public let key = "Optimizely X"
     public var analytics: Analytics? = nil
+    public let optimizelyClient: OptimizelyClient?
+    public var optimizelySettings: OptimizelySettings? {
+        return _optimizelySettings
+    }
     
-    private var optimizelySettings: OptimizelySettings?
-    private var optimizelyClient: OptimizelyClient!
-    private var userContext: OptimizelyUserContext!
-    private var experimentationKey: String!
+    internal var _optimizelySettings: OptimizelySettings?
+    internal var userContext: OptimizelyUserContext?
+    internal var experimentationKey: String!
     
     public init(optimizelyKey: String, experimentKey: String? = "") {
         optimizelyClient = OptimizelyClient(sdkKey: optimizelyKey, defaultLogLevel: .debug)
@@ -71,7 +74,7 @@ public class OptimizelyFullStack: DestinationPlugin {
             return
         }
 
-        optimizelySettings = tempSettings
+        _optimizelySettings = tempSettings
         
         initializeOptimizelySDKAsynchronous()
     }
@@ -80,7 +83,7 @@ public class OptimizelyFullStack: DestinationPlugin {
                         
         addNotificationListeners()
         
-        optimizelyClient.start { result in
+        optimizelyClient?.start { result in
             switch result {
             case .failure(let error):
                 debugPrint("Optimizely SDK initiliazation failed: \(error)")
@@ -92,9 +95,9 @@ public class OptimizelyFullStack: DestinationPlugin {
     
     private func addNotificationListeners() {
         // notification listeners
-        let notificationCenter = optimizelyClient.notificationCenter!
+        guard let notificationCenter = optimizelyClient?.notificationCenter else { return }
         
-        if optimizelySettings?.listen == true {
+        if _optimizelySettings?.listen == true {
             _ = notificationCenter.addDecisionNotificationListener(decisionListener: { (type, userId, attributes, decisionInfo) in
                 let decisionInfoStr = (decisionInfo.compactMap({ (key, value) -> String in
                             return "\(key)=\(value)"
@@ -116,7 +119,7 @@ public class OptimizelyFullStack: DestinationPlugin {
         })
         
         _ = notificationCenter.addDatafileChangeNotificationListener(datafileListener: { _ in
-            if let optConfig = try? self.optimizelyClient.getOptimizelyConfig() {
+            if let optConfig = try? self.optimizelyClient?.getOptimizelyConfig() {
                 debugPrint("[OptimizelyConfig] revision = \(optConfig.revision)")
             }
         })
@@ -124,15 +127,14 @@ public class OptimizelyFullStack: DestinationPlugin {
     
     public func identify(event: IdentifyEvent) -> IdentifyEvent? {
         if let currentUserId = event.userId {
-            userContext = self.optimizelyClient.createUserContext(userId: currentUserId)
+            userContext = self.optimizelyClient?.createUserContext(userId: currentUserId)
         }
         
         return event
     }
     
     public func track(event: TrackEvent) -> TrackEvent? {
-        
-        let trackKnownUsers = optimizelySettings?.trackKnownUsers
+        let trackKnownUsers = _optimizelySettings?.trackKnownUsers
         var userId = event.userId
         
         if userId == nil && (trackKnownUsers != nil && trackKnownUsers == true) {
@@ -145,12 +147,12 @@ public class OptimizelyFullStack: DestinationPlugin {
         
         if let userID = userId {
             //create user context and then call track
-            userContext = optimizelyClient.createUserContext(userId: userID)
+            let userContext = optimizelyClient?.createUserContext(userId: userID)
             trackUser(trackEvent: event)
             
             //To prevent loop of calling decide method, we are restricting it by below condition
             if event.event != "Experiment Viewed" {
-                _ = userContext.decide(key: experimentationKey)
+                _ = userContext?.decide(key: experimentationKey)
             }            
         }
         
@@ -158,30 +160,18 @@ public class OptimizelyFullStack: DestinationPlugin {
     }
     
     private func trackUser(trackEvent: TrackEvent) {
-        
+        guard let userContext else { return }
         if let eventTags = trackEvent.properties?.dictionaryValue {
-            do {
-                try userContext.trackEvent(eventKey: trackEvent.event,
-                                           eventTags: eventTags)
-            } catch {
-                
-            }
+            try? userContext.trackEvent(eventKey: trackEvent.event, eventTags: eventTags)
         }
         else {
-            do {
-                try userContext.trackEvent(eventKey: trackEvent.event)
-            } catch {
-            }
+            try? userContext.trackEvent(eventKey: trackEvent.event)
         }
     }
     
     public func reset() {
-        if optimizelyClient == nil {
-            return
-        }
-        else {
-            optimizelyClient.notificationCenter?.clearAllNotificationListeners()
-        }
+        guard let optimizelyClient else { return }
+        optimizelyClient.notificationCenter?.clearAllNotificationListeners()
     }
 }
 
@@ -191,7 +181,7 @@ extension OptimizelyFullStack: VersionedPlugin {
     }
 }
 
-private struct OptimizelySettings: Codable {
+public struct OptimizelySettings: Codable {
     let periodicDownloadInterval: Int?
     let trackKnownUsers: Bool
     let listen: Bool
