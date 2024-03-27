@@ -137,6 +137,21 @@ public class OptimizelyFullStack: DestinationPlugin {
         let trackKnownUsers = _optimizelySettings?.trackKnownUsers
         var userId = event.userId
         
+        var optimizelyEvent = event
+
+        if var properties = event.properties?.dictionaryValue {
+            if let revenue = properties["revenue"] {
+                if let actualRevenue = revenue as? Int {
+                    let optimizelyRevenue = actualRevenue * 100
+                    properties["revenue"] = optimizelyRevenue
+                } else if let actualRevenue = revenue as? Double {
+                    let optimizelyRevenue = Int(actualRevenue) * 100
+                    properties["revenue"] = optimizelyRevenue
+                }
+            }
+            optimizelyEvent.properties = try? JSON(properties)
+        }
+        
         if userId == nil && (trackKnownUsers != nil && trackKnownUsers == true) {
             debugPrint("Segment will only track users associated with a userId when the trackKnownUsers setting is enabled.")
         }
@@ -148,7 +163,7 @@ public class OptimizelyFullStack: DestinationPlugin {
         if let userID = userId {
             //create user context and then call track
             let userContext = optimizelyClient?.createUserContext(userId: userID)
-            trackUser(trackEvent: event)
+            trackUser(trackEvent: optimizelyEvent)
             
             //To prevent loop of calling decide method, we are restricting it by below condition
             if event.event != "Experiment Viewed" {

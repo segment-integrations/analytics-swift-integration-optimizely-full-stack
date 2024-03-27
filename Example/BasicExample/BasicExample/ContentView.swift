@@ -37,7 +37,10 @@ struct ContentView: View {
                 }).padding(6)
             }.padding(8)
         }.onAppear {
-            Analytics.main.track(name: "onAppear")
+            struct Properties: Codable {
+                let revenue: Int
+            }
+            Analytics.main.track(name: "onAppear", properties: Properties(revenue: 39))
             print("Executed Analytics onAppear()")
         }.onDisappear {
             Analytics.main.track(name: "onDisappear")
