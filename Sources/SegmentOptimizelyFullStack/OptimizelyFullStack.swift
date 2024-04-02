@@ -145,7 +145,7 @@ public class OptimizelyFullStack: DestinationPlugin {
                     let optimizelyRevenue = actualRevenue * 100
                     properties["revenue"] = optimizelyRevenue
                 } else if let actualRevenue = revenue as? Double {
-                    let optimizelyRevenue = Int(actualRevenue) * 100
+                    let optimizelyRevenue = Int(actualRevenue * 100)
                     properties["revenue"] = optimizelyRevenue
                 }
             }
